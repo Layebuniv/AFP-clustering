@@ -199,7 +199,7 @@ If you use this code in your research, please cite:
 
 ```bibtex
 @software{front_propagation_clustering,
-  author = {Your Name},
+  author = {Abdesslem LAYEB},
   title = {Front Propagation Clustering Algorithms},
   year = {2025},
   url = {https://github.com/yourusername/front-propagation-clustering}
