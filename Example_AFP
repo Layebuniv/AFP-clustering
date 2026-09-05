@@ -1,0 +1,92 @@
+"""
+Example: Adaptive Front Propagation (AFP) on classic synthetic datasets
+========================================================================
+
+Demonstrates AFP clustering on three canonical toy datasets used to
+benchmark clustering algorithms:
+
+  * make_blobs   -> well-separated convex clusters
+  * make_moons   -> two interleaving non-convex crescents
+  * make_circles -> two concentric circles (non-convex, nested)
+
+Run:
+    python example_synthetic_datasets.py
+
+Produces `afp_synthetic_datasets.png` with a 1x3 grid of results.
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_blobs, make_moons, make_circles
+from sklearn.preprocessing import StandardScaler
+
+from afp_clustering import AdaptiveFrontPropagation
+
+RANDOM_STATE = 42
+
+# ----------------------------------------------------------------
+# 1. Build the three datasets
+# ----------------------------------------------------------------
+X_blobs, _ = make_blobs(
+    n_samples=400, centers=4, cluster_std=0.7, random_state=RANDOM_STATE
+)
+
+X_moons, _ = make_moons(
+    n_samples=400, noise=0.06, random_state=RANDOM_STATE
+)
+
+X_circles, _ = make_circles(
+    n_samples=400, noise=0.04, factor=0.5, random_state=RANDOM_STATE
+)
+
+datasets = {
+    "Blobs (k=4)": (X_blobs, 4),
+    "Moons (k=2)": (X_moons, 2),
+    "Circles (k=2)": (X_circles, 2),
+}
+
+# ----------------------------------------------------------------
+# 2. Fit AFP on each dataset
+#    - Convex/well-separated data (blobs): "density" speed works well.
+#    - Non-convex shapes (moons, circles): the front needs to follow
+#      the manifold rather than jump across gaps, so a k adapted to
+#      local density plus gated seeding helps avoid over-splitting.
+# ----------------------------------------------------------------
+results = {}
+
+for name, (X_raw, k) in datasets.items():
+    X = StandardScaler().fit_transform(X_raw)
+
+    model = AdaptiveFrontPropagation(
+        n_clusters=k,
+        k_neighbors=10 if "Blobs" in name else 8,
+        speed_variant="density",
+        seed_strategy="gated",
+        resolve_unlabeled=True,
+        random_state=RANDOM_STATE,
+    )
+    labels = model.fit_predict(X)
+    results[name] = (X, labels)
+
+# ----------------------------------------------------------------
+# 3. Plot
+# ----------------------------------------------------------------
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+for ax, (name, (X, labels)) in zip(axes, results.items()):
+    scatter = ax.scatter(
+        X[:, 0], X[:, 1], c=labels, cmap="tab10", s=18, linewidths=0
+    )
+    ax.set_title(name)
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+fig.suptitle("Adaptive Front Propagation (AFP) — Synthetic Dataset Examples", y=1.03)
+fig.tight_layout()
+fig.savefig("afp_synthetic_datasets.png", dpi=150, bbox_inches="tight")
+print("Saved figure to afp_synthetic_datasets.png")
+
+for name, (_, labels) in results.items():
+    n_found = len(set(labels)) - (1 if -1 in labels else 0)
+    n_noise = int(np.sum(labels == -1))
+    print(f"{name}: {n_found} clusters found, {n_noise} points marked as noise")
