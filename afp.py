@@ -12,7 +12,7 @@ includes:
     (``resolve_unlabeled``) using component-size and relative-
     density-gap criteria.
 
-Author: Abdesslem Layeb 
+Author: Abdesslem Layeb
 License: MIT
 """
 
@@ -417,37 +417,3 @@ class AdaptiveFrontPropagation:
     def fit_predict(self, X):
         self.fit(X)
         return self.labels_
-
-
-if __name__ == "__main__":
-    from sklearn.datasets import make_blobs
-
-    X, y = make_blobs(n_samples=300, centers=4, cluster_std=0.7, random_state=0)
-
-    # Classic behaviour (non-gated seeding, no resolution)
-    base = AdaptiveFrontPropagation(
-        n_clusters=4,
-        seed_strategy="speed_farthest",
-        resolve_unlabeled=False
-    ).fit(X)
-
-    # Gated seeding + optional noise resolution
-    resolved = AdaptiveFrontPropagation(
-        n_clusters=4,
-        seed_strategy="gated",
-        resolve_unlabeled=True
-    ).fit(X)
-
-    # Gated seeding, but resolution disabled
-    gated_only = AdaptiveFrontPropagation(
-        n_clusters=4,
-        seed_strategy="gated",
-        resolve_unlabeled=False
-    ).fit(X)
-
-    print("base labels (unique):", np.unique(base.labels_))
-    print("resolved labels (unique):", np.unique(resolved.labels_))
-    print("resolved noise/unreachable:", resolved.noise_count_, resolved.unreachable_count_)
-    print("gated_only labels (unique):", np.unique(gated_only.labels_))
-    print("gated_only noise/unreachable (should be None, None):",
-          gated_only.noise_count_, gated_only.unreachable_count_)
