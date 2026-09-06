@@ -399,7 +399,7 @@ class AdaptiveFrontPropagation:
         while pq:
             neg_v, i, cid = heapq.heappop(pq)
             for j in knn_idx[i]:
-                if labels[j] == -1 or speeds[j] > arrival[j]:
+                if labels[j] == -1:
                     labels[j] = cid
                     arrival[j] = speeds[j]
                     heapq.heappush(pq, (-speeds[j], j, cid))
